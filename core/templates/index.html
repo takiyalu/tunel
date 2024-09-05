@@ -1,0 +1,61 @@
+{% load bootstrap4%}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading</title>
+    <!-- Include Bootstrap 4 CSS -->
+    {% bootstrap_css %}
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- Titulo descritivo -->
+    <header>
+        <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
+            <div class="container text-center">
+                <h2 class="head-title">Utilize a área de busca para pesquisar pelos ativos que deseja monitorar</h2>
+                <p>Clique em 'Buscar Ativos Salvos' para listar os ativos que estão sendo monitorados no momento.</p>
+                <div class="header-button">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Área de Busca -->
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Área de Busca</h1>
+        <div class="d-flex justify-content-center">
+            <form id="pesquisa-form" method="get" action="{% url 'core:pesquisa' %}" onsubmit="return validateForm()">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="palavra_chave">Nome ou Ticker:</label>
+                            <input type="text" class="form-control" id="palavra_chave" name="palavra_chave" placeholder="Nome ou Ticker">
+                            {% if form.ticker.errors %}
+                                <div class="help-block with-errors">{{ form.ticker.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="submit-button text-center">
+                    <button class="btn btn-custom mx-3" id="form-submit" type="submit">Procurar</button>
+                    <div id="msgSubmit" class="h3 text-center hidden"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fim da Área de Busca -->
+    <!-- Botão para listagem de ativos salvos -->
+    <div class="d-flex justify-content-center mt-4">
+        <a href="#" class="btn btn-custom mx-3">Listar ativos salvos</a>
+    </div>
+
+    <script src="{% static 'js/script.js' %}" defer></script>
+    {% bootstrap_javascript jquery='full' %}
+</body>
+</html>

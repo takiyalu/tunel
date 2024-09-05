@@ -1,0 +1,97 @@
+{% load static %}
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ symbol }}</title>
+    {% bootstrap_css %}
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
+            <div class="container text-center">
+                <h2 class="head-title">{{ symbol }} - {{ longName }} (Exchange: {{ exchange }})</h2>
+                <p>{{ longBusinessSummary }}</p>
+                <div class="header-button">
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Tabela -->
+        <div class="container mt-5">
+        <h1 class="text-center mb-4">Numerical Description</h1>
+        <div class="d-flex justify-content-center">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Ultimo preço</th>
+                    <th>Bid</th>
+                    <th>Ask</th>
+                    <th>Market Cap</th>
+                    <th>Volume no Dia</th>
+                    <th>Beta</th>
+                </tr>
+            </thead>
+            <tbody>
+                    <tr>
+                        <td>{{ table.previousClose }}</td>
+                        <td>{{ table.bid }}</td>
+                        <td>{{ table.ask }}</td>
+                        <td>{{ table.marketCap }}</td>
+                        <td>{{ table.volume }}</td>
+                        <td>{{ table.beta }}</td>
+                    </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+        <!-- Botões de ação -->
+    <div class="d-flex justify-content-center mt-4">
+        <button id="monitorarBtn" class="btn btn-custom mx-3" onclick="">Monitorar</button>
+        <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
+    </div>
+
+    <!-- Container que aparece ao clicar em "Monitorar" -->
+    <div id="monitorarContainer" class="container mt-4" style="display: none;">
+        <h3 class="text-center">Configure os limites e a periodicidade</h3>
+        <form id="ativo-form" method="post" action="{% url 'core:ativo' ativo_symbol=ativo_symbol %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <h1 class="text-center mb-4">{{ symbol }} - {{ longName }} (Exchange: {{ exchange }})</h1>
+                        <label for="periodicidade">Periodicidade de Checagem (Minutos)</label>
+                        <input type="number" class="form-control" id="periodicidade" name="periodicidade" placeholder="Periodicidade">
+                        {% if form.periodicidade.errors %}
+                        <div class="help-block with-errors">{{ form.periodicidade.errors }}</div>
+                        {% endif %}
+                        <label for="limite_superior">Limite Superior (Formato xx.xx)</label>
+                        <input type="number" step="0.01" class="form-control" id="limite_superior" name="limite_superior" placeholder="Limite superior">
+                        {% if form.limite_superior.errors %}
+                        <div class="help-block with-errors">{{ form.limite_superior.errors }}</div>
+                        {% endif %}
+                        <label for="limite_inferior">Limite Inferior (Formato xx.xx)</label>
+                        <input type="number" step="0.01" class="form-control" id="limite_inferior" name="limite_inferior" placeholder="Limite inferior">
+                        {% if form.limite_inferior.errors %}
+                        <div class="help-block with-errors">{{ form.limite_inferior.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="submit-button text-center">
+                <button class="btn btn-custom mx-3" id="form-submit" type="submit">Salvar</button>
+                <div id="msgSubmit" class="h3 text-center hidden"></div>
+            </div>
+        </form>
+    </div>
+    {% if success_message %}
+    <div class="alert alert-success success-message">
+        {{ success_message }}
+    </div>
+    {% endif %}
+    <script src="{% static 'js/script.js' %}" defer></script>
+    {% bootstrap_javascript jquery='full' %}
+</body>
+</html>

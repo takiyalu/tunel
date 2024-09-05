@@ -1,0 +1,167 @@
+body {
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: #e6f9f5; /* Light greenish background */
+    color: #333; /* Dark text color for better readability */
+    font-family: 'Arial', sans-serif;
+}
+
+.container {
+    text-align: center;
+    background: #ffffff; /* White background for container */
+    padding: 50px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); /* Softer shadow for better visibility */
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: #00796b; /* Dark greenish color for headings */
+}
+
+.btn-custom {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 50px;
+    background-color: #004d40; /* Dark green color */
+    border: none;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.btn-custom:hover {
+    background-color: #00332e; /* Darker green for hover effect */
+}
+
+.custom-input {
+    width: 100%;
+    max-width: 100%; /* Ensure the input can stretch to fill the column */
+}
+
+.form-group {
+    position: relative;
+    width: 100%; /* Set the width to 50% of the container */
+    box-sizing: border-box;
+    justify-content: center;
+    margin: 10px;
+}
+
+.col-md-6 {
+    display: flex;
+    justify-content: center; /* Center the input inside the column */
+}
+
+
+#palavra {
+    width: 100%;
+    height: 44px;
+    padding: 10px 15px;
+    font-size: 16px;
+    line-height: 22px;
+    color: #202124;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #dfe1e5;
+    border-radius: 24px;
+    box-shadow: none;
+    transition: box-shadow 0.3s ease-in-out;
+    outline: none;
+}
+
+#palavra:focus {
+    border-color: #4285f4;
+    box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+}
+
+#form-submit {
+    height: 44px;
+    padding: 0 15px;
+    font-size: 16px;
+    line-height: 22px;
+    color: #fff;
+    background-color: #4285f4;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* General table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: left;
+    background-color: #f8f9fa; /* Light gray background */
+}
+
+/* Table header styling */
+table thead th {
+    background-color: #343a40; /* Dark background for headers */
+    color: white; /* White text */
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: bold;
+}
+
+/* Table body styling */
+table tbody td {
+    padding: 12px 15px;
+}
+
+/* Alternating row colors */
+table tbody tr:nth-of-type(even) {
+    background-color: #e9ecef; /* Light gray for alternating rows */
+}
+
+/* Hover effect for rows */
+table tbody tr:hover {
+    background-color: #adb5bd; /* Gray on hover */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Borders for table and cells */
+table, th, td {
+    border: 1px solid #dee2e6; /* Light gray border */
+}
+
+/* Responsive table */
+@media screen and (max-width: 768px) {
+    table {
+        font-size: 16px;
+    }
+    table thead {
+        display: none;
+    }
+    table, table tbody, table tr, table td {
+        display: block;
+        width: 100%;
+    }
+    table tr {
+        margin-bottom: 15px;
+    }
+    table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+    table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 15px;
+        font-weight: bold;
+        text-align: left;
+        background-color: #e9ecef;
+        color: #343a40;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+}

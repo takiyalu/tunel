@@ -1,0 +1,69 @@
+{% load static %}
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa</title>
+    <!-- Include Bootstrap 4 CSS -->
+    {% bootstrap_css %}
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- Titulo descritivo -->
+    <header>
+        <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
+            <div class="container text-center">
+                <h2 class="head-title">Selecione o ativo desejado</h2>
+                <p>Ao selecionar o ativo você deve configurar os limites e a periodicidade de checagem</p>
+                <div class="header-button">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tabela -->
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Ativos encontrados</h1>
+        <div class="d-flex justify-content-center">
+                {% if pesquisa %}
+        <table border="1">
+            <thead>
+                <tr>
+                    {% for key in pesquisa.0.keys %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in pesquisa %}
+                    <tr>
+                            {% for key, value in row.items %}
+                                {% if key == 'name' %}
+                                    <!-- Add a link to the name column -->
+                                    <td>
+                                        <a href="{% url 'core:ativo' ativo_symbol=row.symbol %}">
+                                            {{ value }}
+                                        </a>
+                                    </td>
+                                {% else %}
+                                    <td>{{ value }}</td>
+                                {% endif %}
+                            {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Não foram encontrados resultados para "{{ request.GET.palavra_chave }}".</p>
+    {% endif %}
+        </div>
+    </div>
+        <!-- Fim da Área de Busca -->
+        <!-- Botão para listagem de ativos salvos -->
+    <div class="d-flex justify-content-center mt-4">
+        <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
+    </div>
+</body>
+</html>
