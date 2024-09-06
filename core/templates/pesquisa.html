@@ -22,7 +22,7 @@
             </div>
         </div>
     </header>
-
+    <pre>{{ ativos|safe }}</pre>
     <!-- Tabela -->
     <div class="container mt-5">
         <h1 class="text-center mb-4">Ativos encontrados</h1>
@@ -43,7 +43,7 @@
                                 {% if key == 'name' %}
                                     <!-- Add a link to the name column -->
                                     <td>
-                                        <a href="{% url 'core:ativo' ativo_symbol=row.symbol %}">
+                                        <a href="{% url 'core:ativo-detail' symbol=row.symbol %}">
                                             {{ value }}
                                         </a>
                                     </td>
@@ -61,7 +61,6 @@
         </div>
     </div>
         <!-- Fim da Área de Busca -->
-        <!-- Botão para listagem de ativos salvos -->
     <div class="d-flex justify-content-center mt-4">
         <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
     </div>

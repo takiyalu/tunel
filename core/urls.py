@@ -6,6 +6,7 @@ app_name = 'core'  # This defines the namespace for this app (Useful to be refer
 urlpatterns = [
     path('', IndexView.as_view(), name='index'),
     path('pesquisa/', PesquisaView.as_view(), name='pesquisa'),
-    path('salvos/', AtivosSalvosView.as_view(), name='salvo'),
-    path('ativo/<str:ativo_symbol>/', AtivoView.as_view(), name='ativo'),
+    path('salvos/', AtivosSalvosView.as_view(), name='salvos'),
+    path('ativo/<str:symbol>/', AtivoView.as_view(), name='ativo-detail'),
+    path('ativo/', AtivoView.as_view(), name='ativo'),
 ]

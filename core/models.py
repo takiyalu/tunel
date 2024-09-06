@@ -3,7 +3,8 @@ from django.db import models
 
 class Base(models.Model):
     created = models.DateField('Creation', auto_now_add=True)
-    updated = models.DateField('Update', auto_now=True)
+    updated = models.DateField('Update Day', auto_now=True)
+
     active = models.BooleanField('Active?', default=True)
 
     class Meta:

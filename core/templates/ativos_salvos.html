@@ -1,0 +1,78 @@
+{% load static %}
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa</title>
+    <!-- Include Bootstrap 4 CSS -->
+    {% bootstrap_css %}
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- Titulo descritivo -->
+    <header>
+        <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
+            <div class="container text-center">
+                <h2 class="head-title">Lista de Ativos</h2>
+                <p>Os ativos baixos estão sendo monitorados, em caso de preços ultrapassando os limites enviaremos um email avisando sobre a oportunidade</p>
+                <div class="header-button">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tabela -->
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Ativos Monitorados</h1>
+        <div class="d-flex justify-content-center">
+            {% if ativos %}
+                <form method="post">
+                {% csrf_token %}
+                <div class="table-responsive"> <!-- Add this div -->
+        <table border="1">
+            <thead>
+                <tr>
+                    {% for coluna in ativos.0.keys %}
+                        {% if coluna not in 'id' %}
+                        <th class="text-center">{{ coluna|upper }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for ativo in ativos %}
+                <tr>
+                    {% for chave, valor in ativo.items %}
+                        {% if chave == 'nome' %}
+                            <td class="text-center">
+                            <a href="{% url 'core:ativo-detail' symbol=ativo.ticker %}">
+                                {{ valor }}
+                            </a>
+                            </td>
+                        {% elif chave in editaveis %}
+                            <td class="text-center">
+                                <input type="text" name="ativo_{{ ativo.id }}_{{ chave }}" value="{{ valor }}">
+                            </td>
+                        {% elif chave != 'id' %}
+                            <td class="text-center">{{ valor }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+                </div>
+                    <button type="submit">Save Changes</button>
+                </form>
+    {% else %}
+        <p>Não foram encontrados resultados ativos salvos na base de dados".</p>
+    {% endif %}
+        </div>
+    </div>
+    <div class="d-flex justify-content-center mt-4">
+        <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
+    </div>
+</body>
+</html>

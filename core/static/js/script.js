@@ -11,8 +11,14 @@ function validateForm() {
 }
 
 document.getElementById('monitorarBtn').addEventListener('click', function() {
-    document.getElementById('monitorarContainer').style.display = 'block';}
-);
+    const ticker = document.getElementById('ticker').value.trim(); // Get the ticker value
+
+    if (ticker) { // Ensure ticker is not empty
+        validateProduct(ticker);
+    } else {
+        alert("Ticker cannot be empty.");
+    }
+});
 
 document.addEventListener("DOMContentLoaded", function() {
     // Check if there's a success message and scroll to top
@@ -21,20 +27,29 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-document.getElementById('monitorarBtn').addEventListener('click', function() {
-    var symbol = '{{ ativo_symbol }}';  // Assuming this is passed in the template context
-    $.ajax({
-        url: '{% url "check_symbol" %}',
-        data: {
-            'symbol': symbol
-        },
-        success: function(response) {
-            if (response.exists) {
-                alert('Ativo already exists in the database.');
-            } else {
-                // Open the form to create a new Ativo
-                document.getElementById('form-section').style.display = 'block';  // Assuming your form is hidden and will be displayed here
-            }
+function validateProduct(ticker) {
+    // Send an AJAX request to the server to check if the product is already monitored
+    fetch(`/ativo/?ticker=${ticker}`, {  // Ensure URL is correct
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
         }
-    });
-});
+    })
+    .then(response => response.json())  // Convert response to JSON
+    .then(data => {
+        const modal = new bootstrap.Modal(document.getElementById('error-modal'));
+        const messageElement = document.getElementById('error-message');
+        const closeButton = document.querySelector('.close-btn');
+
+        if (data.is_monitored) {
+            messageElement.innerText = "This product is already being monitored.";
+            modal.show();
+            document.getElementById('monitorarContainer').style.display = 'none'; // Hide the monitorarContainer
+        } else {
+            messageElement.innerText = "";
+            modal.hide();
+            document.getElementById('monitorarContainer').style.display = 'block'; // Show the monitorarContainer
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}

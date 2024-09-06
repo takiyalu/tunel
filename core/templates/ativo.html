@@ -36,12 +36,12 @@
             </thead>
             <tbody>
                     <tr>
-                        <td>{{ table.previousClose }}</td>
-                        <td>{{ table.bid }}</td>
-                        <td>{{ table.ask }}</td>
-                        <td>{{ table.marketCap }}</td>
-                        <td>{{ table.volume }}</td>
-                        <td>{{ table.beta }}</td>
+                        <td>{{ previousClose }}</td>
+                        <td>{{ bid }}</td>
+                        <td>{{ ask }}</td>
+                        <td>{{ marketCap }}</td>
+                        <td>{{ volume }}</td>
+                        <td>{{ beta }}</td>
                     </tr>
             </tbody>
         </table>
@@ -49,14 +49,15 @@
     </div>
         <!-- Botões de ação -->
     <div class="d-flex justify-content-center mt-4">
-        <button id="monitorarBtn" class="btn btn-custom mx-3" onclick="">Monitorar</button>
+        <button id="monitorarBtn" class="btn btn-custom mx-3" onclick="validateProduct('{{ symbol }}')">Monitorar</button>
         <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
     </div>
 
     <!-- Container que aparece ao clicar em "Monitorar" -->
     <div id="monitorarContainer" class="container mt-4" style="display: none;">
         <h3 class="text-center">Configure os limites e a periodicidade</h3>
-        <form id="ativo-form" method="post" action="{% url 'core:ativo' ativo_symbol=ativo_symbol %}">
+
+        <form id="ativo-form" method="post" action="{% url 'core:ativo-detail' symbol=symbol %}">
             {% csrf_token %}
             <div class="row">
                 <div class="col-md-6">
@@ -86,11 +87,21 @@
             </div>
         </form>
     </div>
-    {% if success_message %}
-    <div class="alert alert-success success-message">
-        {{ success_message }}
+    <div id="error-modal" class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Alert</h5>
+                    <button type="button" class="close close-btn" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="error-message"></p>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
     <script src="{% static 'js/script.js' %}" defer></script>
     {% bootstrap_javascript jquery='full' %}
 </body>

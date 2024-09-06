@@ -8,6 +8,7 @@ charset-normalizer==3.3.2
 Django==5.1
 django-bootstrap4==24.3
 django-channels==0.7.0
+django-debug-toolbar==4.4.6
 frozendict==2.4.4
 html5lib==1.1
 idna==3.8
