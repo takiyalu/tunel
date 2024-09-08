@@ -12,6 +12,19 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+
+# Initialize environment variables
+env = environ.Env()
+
+# O Pycharm não possui consegue ler o arquivo .env e espera que as variáveis sejam passadas como variáveis de ambiente
+# do terminal ou do das run configs. Mas em outras IDEs esta linha faria a leitura do arquivo .env na raiz do
+# nosso projeto. Para o Pycharm, copiar as variáveis do arquivo .env e colar em File > Settings > Tools > Terminal
+# no caso de uso do terminal, no caso de Run Configs colar em Run > Edit Configurations
+environ.Env.read_env()
+
+# Carrega a chave da API das variáveis de ambiente
+ALPHA_VANTAGE_API_KEY = env('ALPHA_VANTAGE_API_KEY')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +41,18 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CELERY_BROKER_URL = 'amqp://localhost'  # This points to RabbitMQ running locally
+
+# Optional result backend (if you want to store task results):
+CELERY_RESULT_BACKEND = 'django-db'
+
+# Task serialization and content
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Application definition
 
@@ -41,6 +66,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +83,10 @@ MIDDLEWARE = [
 INTERNAL_IPS = ['127.0.0.1']
 
 ROOT_URLCONF = 'tunnel.urls'
+
+SESSION_COOKIE_AGE = 86400  # 1 day in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 TEMPLATES = [
     {
@@ -76,6 +106,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'tunnel.wsgi.application'
 
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -138,3 +170,27 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'core': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

@@ -1,15 +1,3 @@
-function validateForm() {
-    const nameInput = document.getElementById('nome').value.trim();
-    const tickerInput = document.getElementById('ticker').value.trim();
-
-    if (nameInput === "" && tickerInput === "") {
-        // Previne o usário de preencher ambos os campos vazios(Buscam todos os ativos existentes)
-        alert("Ao menos um dos campos deve ser preenchido");
-        return false;
-    }
-    return true;
-}
-
 document.getElementById('monitorarBtn').addEventListener('click', function() {
     const ticker = document.getElementById('ticker').value.trim(); // Get the ticker value
 
