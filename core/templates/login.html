@@ -1,0 +1,24 @@
+{% load static %}
+{% load bootstrap4 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    {% bootstrap_css %}
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+<h2>Login</h2>
+<form method="post" action="{% url 'core:login' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="d-inline-block">
+        <button class="btn btn-primary btn-sm" type="submit">Login</button>
+    </div>
+    <div class="d-inline-block ms-2">
+        <a href="{% url 'core:cadastro' %}" class="btn btn-primary btn-sm">Cadastrar</a>
+    </div>
+</form>
+</body>
+</html>

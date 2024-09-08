@@ -11,6 +11,14 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 </head>
 <body>
+    <nav>
+        <!-- Other navigation links -->
+        <a href="{% url 'core:perfil' %}" class="btn btn-custom mx-3">Meu Perfil</a>
+        <form method="post" action="{% url 'core:logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+        </form>
+    </nav>
     <!-- Titulo descritivo -->
     <header>
         <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
@@ -27,7 +35,7 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Área de Busca</h1>
         <div class="d-flex justify-content-center">
-            <form id="pesquisa-form" method="get" action="{% url 'core:pesquisa' %}" onsubmit="return validateForm()">
+            <form id="pesquisa-form" method="get" action="{% url 'core:pesquisa' %}">
                 {% csrf_token %}
 
                 <div class="row">
@@ -35,8 +43,8 @@
                         <div class="form-group">
                             <label for="palavra_chave">Nome ou Ticker:</label>
                             <input type="text" class="form-control" id="palavra_chave" name="palavra_chave" placeholder="Nome ou Ticker">
-                            {% if form.ticker.errors %}
-                                <div class="help-block with-errors">{{ form.ticker.errors }}</div>
+                            {% if form.palavra_chave.errors %}
+                                <div class="help-block with-errors">{{ form.palavra_chave.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
