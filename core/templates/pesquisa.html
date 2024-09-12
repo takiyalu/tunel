@@ -11,6 +11,9 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 </head>
 <body>
+{% block content %}
+    {% include 'topo.html' %}
+{% endblock %}
     <!-- Titulo descritivo -->
     <header>
         <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
@@ -25,7 +28,31 @@
     <pre>{{ ativos|safe }}</pre>
     <!-- Tabela -->
     <div class="container mt-5">
+        <div class="d-inline-block">
         <h1 class="text-center mb-4">Ativos encontrados</h1>
+        </div>
+
+                <form id="pesquisa-form" method="get" action="{% url 'core:pesquisa' %}">
+                {% csrf_token %}
+                <div class="d-inline-block ms-2">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="palavra_chave" name="palavra_chave" placeholder="Nome ou Ticker">
+                            {% if form.palavra_chave.errors %}
+                                <div class="help-block with-errors">{{ form.palavra_chave.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="d-inline-block ms-3">
+                <div class="submit-button text-center">
+                    <button class="btn btn-custom mx-3" id="form-submit" type="submit">Procurar</button>
+                </div>
+                </div>
+            </form>
+
         <div class="d-flex justify-content-center">
                 {% if pesquisa %}
         <table border="1">
@@ -61,8 +88,5 @@
         </div>
     </div>
         <!-- Fim da Área de Busca -->
-    <div class="d-flex justify-content-center mt-4">
-        <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
-    </div>
 </body>
 </html>

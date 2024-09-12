@@ -36,7 +36,13 @@ function validateProduct(ticker) {
         } else {
             messageElement.innerText = "";
             modal.hide();
-            document.getElementById('monitorarContainer').style.display = 'block'; // Show the monitorarContainer
+            const monitorarContainer = document.getElementById('monitorarContainer');
+            monitorarContainer.style.display = 'block'; // Show the monitorarContainer
+
+            // Scroll down to the form area with a slight delay to ensure it's visible
+            setTimeout(() => {
+                monitorarContainer.scrollIntoView({ behavior: 'smooth' });
+            }, 100);  // Adjust the delay if necessary
         }
     })
     .catch(error => console.error('Error:', error));

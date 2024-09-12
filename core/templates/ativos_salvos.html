@@ -11,6 +11,9 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 </head>
 <body>
+{% block content %}
+    {% include 'topo.html' %}
+{% endblock %}
     <!-- Titulo descritivo -->
     <header>
         <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
@@ -45,7 +48,9 @@
                 {% for ativo in ativos %}
                 <tr>
                     {% for chave, valor in ativo.items %}
-                        {% if chave == 'nome' %}
+                        {% if chave == 'updated' %}
+                            <td class="text-center">{{ valor|date:"Y-m-d H:i:s" }}</td>
+                        {% elif chave == 'nome' %}
                             <td class="text-center">
                             <a href="{% url 'core:ativo-detail' symbol=ativo.ticker %}">
                                 {{ valor }}
@@ -64,15 +69,12 @@
             </tbody>
         </table>
                 </div>
-                    <button type="submit">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
                 </form>
     {% else %}
         <p>Não foram encontrados resultados ativos salvos na base de dados".</p>
     {% endif %}
         </div>
-    </div>
-    <div class="d-flex justify-content-center mt-4">
-        <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
     </div>
 </body>
 </html>

@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 import environ
 
-# Initialize environment variables
+# Inicializa as variáveis de ambiente
 env = environ.Env()
 
 # O Pycharm não possui consegue ler o arquivo .env e espera que as variáveis sejam passadas como variáveis de ambiente
@@ -39,9 +39,10 @@ SECRET_KEY = 'django-insecure-6^^7z7-p7hlf2+mwcg^%r_u-6g*w_xzl_c-*+lndozuihqtr(%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Ajustar host para o caso de subir para produção
 ALLOWED_HOSTS = ['*']
 
-CELERY_BROKER_URL = 'amqp://localhost'  # This points to RabbitMQ running locally
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/'  # Aponta para o RabbitMQ local
 
 # Optional result backend (if you want to store task results):
 CELERY_RESULT_BACKEND = 'django-db'
@@ -50,9 +51,11 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = 'America/Sao_Paulo'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+CELERY_TASK_ALWAYS_EAGER = False
 
 # Application definition
 
@@ -67,6 +70,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'debug_toolbar',
     'django_celery_beat',
+    'django_celery_results',
+    'celery',
+    'kombu.transport',
 ]
 
 MIDDLEWARE = [
@@ -103,6 +109,8 @@ TEMPLATES = [
         },
     },
 ]
+
+DEFAULT_FROM_EMAIL = 'My Domain <noreply@tunnel.com>'
 
 WSGI_APPLICATION = 'tunnel.wsgi.application'
 
@@ -148,7 +156,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
@@ -171,7 +179,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -182,12 +189,12 @@ LOGGING = {
         },
     },
     'loggers': {
-        'django': {
+        'core': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'core': {
+        'celery': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
