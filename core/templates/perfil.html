@@ -1,12 +1,20 @@
+{% load bootstrap4%}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Profile</title>
+    {% bootstrap_css %}
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 </head>
 <body>
+{% block content %}
+    {% include 'topo.html' %}
+{% endblock %}
 <h2>Profile</h2>
 <p>Username: {{ user.username }}</p>
 <p>Email: {{ user.email }}</p>
+<a href="{% url 'core:atualiza-perfil' %}" id="form-submit">Editar Perfil</a>
 </body>
 </html>

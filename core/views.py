@@ -18,19 +18,10 @@ import pandas as pd
 from io import StringIO
 
 
-class IndexView(TemplateView):
+class IndexView(LoginRequiredMixin, TemplateView):
     template_name = 'index.html'
     form_class = PesquisaForm
 
-    def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect('core:login')  # Redirect to login if not authenticated
-        return super().get(request, *args, **kwargs)
-
-    def refuse_not_logged(cls, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect('core:login')  # Redirect to login if not authenticated
-        return cls.super().get(request, *args, **kwargs)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         http = HttpResponse()
@@ -50,7 +41,7 @@ class IndexView(TemplateView):
 class CadastroView(FormView):
     template_name = 'cadastro.html'
     form_class = CadastroForm
-    success_url = reverse_lazy('login')  # Redirect to login page after successful registration
+    success_url = reverse_lazy('core:login')  # Redirect to login page after successful registration
 
     def form_valid(self, form):
         user = form.save()
@@ -104,7 +95,6 @@ class PesquisaView(LoginRequiredMixin, TemplateView):
                 # como "SAPR11.SA", portanto fazemos o slicing abaixo.
                 df.loc[df['region'] == 'Brazil/Sao Paolo', 'symbol'] = df['symbol'].str[:-1]
                 context['pesquisa'] = df.to_dict(orient='records')  # Converts DataFrame to list of dicts
-                print(context['pesquisa'])
             else:
                 context['pesquisa'] = []
 
@@ -119,14 +109,22 @@ class AtivoView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         symbol = self.kwargs.get('symbol')
         product = yf.Ticker(symbol)
+        data = product.history(period="1d")  # Retrieve data for the most recent day
+        if not data.empty:
+            preco = data.iloc[0]['Close']
+        else:
+            # caso não haja dado nenhum preco (O mercado para aquele ativo provavelmente ainda não está aberto ou ja
+            # fechou) utilizamos o último valor registrado
+            preco = product.info['previousClose']
         context.update({**product.info})
+        context['preco'] = round(preco, 2)
         return context
 
     def get(self, request, *args, **kwargs):
         # Check if the request is an AJAX request for validation
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             ticker = request.GET.get('ticker')
-            is_monitored = Ativo.objects.filter(ticker=ticker).exists()
+            is_monitored = Ativo.objects.filter(ticker=ticker, usuario=request.user).exists()
             return JsonResponse({'is_monitored': is_monitored})
 
         # If not an AJAX request, handle normally
@@ -136,10 +134,18 @@ class AtivoView(LoginRequiredMixin, FormView):
         symbol = self.kwargs.get('symbol')
         product = yf.Ticker(symbol)
         context = self.get_context_data(form=form)
+        data = product.history(period="1d")  # Retrieve data for the most recent day
+        if not data.empty:
+            preco = data.iloc[0]['Close']
+        else:
+            # caso não haja dado nenhum preco (O mercado para aquele ativo provavelmente ainda não está aberto ou ja
+            # fechou) utilizamos o último valor registrado
+            preco = product.info['previousClose']
+
         ativo = Ativo(
             nome=product.info['longName'],
             ticker=symbol,
-            preco=product.info['previousClose'],
+            preco=preco,
             periodicidade=form.cleaned_data['periodicidade'],
             limite_superior=form.cleaned_data['limite_superior'],
             limite_inferior=form.cleaned_data['limite_inferior'],
@@ -159,8 +165,9 @@ class AtivosSalvosView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         # Campos a serem excluídos
-        campos_nao_selecionados = ['created', 'active']
+        campos_nao_selecionados = ['created', 'active', 'usuario']
 
         # Todos os campos do modelo
         todos_os_campos = [campo.name for campo in Ativo._meta.fields]
@@ -171,22 +178,19 @@ class AtivosSalvosView(LoginRequiredMixin, TemplateView):
         # Campos editáveis
         campos_editaveis = ['periodicidade', 'limite_inferior', 'limite_superior']
         # Buscando ativos salvos na base de dados
-        context['ativos'] = list(Ativo.objects.values(*campos_selecionados))
+        context['ativos'] = list(Ativo.objects.filter(usuario=self.request.user).values(*campos_selecionados))
         context['editaveis'] = campos_editaveis
-        print(context['ativos'])
         return context
 
     def post(self, request, *args, **kwargs):
-        # Process form data here
         for chave, valor in request.POST.items():
             if chave.startswith('ativo_'):  # Ensure only relevant fields are processed
-                _, id, campo = chave.split('_', 2)  # Extract id and campo from the key
+                _, id, campo = chave.split('_', 2)  # Recupera id e campo da chave
                 try:
-                    print(campo + 'socorro')
                     ativo = Ativo.objects.get(id=id)
                     setattr(ativo, campo, valor.replace(',', '.'))
                     ativo.save()
                 except Ativo.DoesNotExist:
-                    continue  # Handle cases where Ativo is not found
+                    continue  # Gerencia casos em que o Ativo não é encontrado
 
         return redirect('core:salvos')

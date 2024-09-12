@@ -1,14 +1,20 @@
-<header>
-    <div id="topo" class="topo-bg">
-            <div class="row"> <!-- Added row class -->
-                <div class="col-lg-7 col-md-12 col-sm-12 col-xs-12">
-                    <div class="contents">
-                        <h2 class="head-title">Utilize a área de busca para pesquisar pelos ativos que deseja monitorar</h2>
-                        <p>Clique em 'Buscar Ativos Salvos' para listar os ativos que estão sendo monitorados no momento.</p>
-                        <div class="header-button">
-                        </div>
-                    </div>
-                </div>
-            </div> <!-- End row -->
+{% load static %}
+{% load bootstrap4 %}
+<nav class="navbar navbar-expand navbar-dark bg-primary fixed-top"><span class="navbar-toggler-icon"></span> </button>
+    <!-- Other navigation links -->
+    <div class="d-inline-block">
+    <a href="{% url 'core:index' %}" class="btn btn-primary btn-sm">Home</a>
     </div>
-</header>
+    <div class="d-inline-block ms-2">
+        <a href="{% url 'core:salvos' %}" class="btn btn-primary btn-sm">Ativos-Salvos</a>
+    </div>
+    <div class="d-inline-block ms-3">
+    <a href="{% url 'core:perfil' %}" class="btn btn-primary btn-sm">Meu Perfil</a>
+    </div>
+    <div class="d-inline-block ms-4">
+    <form method="post" action="{% url 'core:logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-sm">Logout</button>
+    </form>
+    </div>
+</nav>

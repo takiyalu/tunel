@@ -12,27 +12,17 @@
 </head>
 <body>
     <!-- Titulo descritivo -->
-    <header>
-        <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
-            <div class="container text-center">
-                <h2 class="head-title">Lista de Ativos</h2>
-                <p>Os ativos baixos estão sendo monitorados, em caso de preços ultrapassando os limites enviaremos um email avisando sobre a oportunidade</p>
-                <div class="header-button">
-                </div>
-            </div>
-        </div>
-    </header>
-        <h1 class="text-center mb-4">Ativos Monitorados</h1>
+        <h1 class="text-center mb-4">Tela de Cadastro</h1>
         <div class="d-flex justify-content-center">
-            <h2>Sign Up</h2>
                 <form method="post">
                     {% csrf_token %}
                     {{ form.as_p }}
-                    <button type="submit">Sign Up</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                    <a href="{% url 'core:login' %}" class="btn btn-primary">Cancelar</a>
                 </form>
         </div>
     <div class="d-flex justify-content-center mt-4">
-        <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
+
     </div>
 </body>
 </html>

@@ -9,6 +9,9 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 </head>
 <body>
+{% block content %}
+    {% include 'topo.html' %}
+{% endblock %}
     <header>
         <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
             <div class="container text-center">
@@ -36,7 +39,7 @@
             </thead>
             <tbody>
                     <tr>
-                        <td>{{ previousClose }}</td>
+                        <td>{{ preco }}</td>
                         <td>{{ bid }}</td>
                         <td>{{ ask }}</td>
                         <td>{{ marketCap }}</td>
@@ -45,22 +48,20 @@
                     </tr>
             </tbody>
         </table>
+    </div>
+            <div class="d-flex justify-content-center mt-4">
+            <button id="monitorarBtn" class="btn btn-primary" onclick="validateProduct('{{ symbol }}')">Monitorar</button>
         </div>
     </div>
-        <!-- Botões de ação -->
-    <div class="d-flex justify-content-center mt-4">
-        <button id="monitorarBtn" class="btn btn-custom mx-3" onclick="validateProduct('{{ symbol }}')">Monitorar</button>
-        <a href="{% url 'core:index' %}" class="btn btn-custom mx-3">Voltar à página principal</a>
-    </div>
+
 
     <!-- Container que aparece ao clicar em "Monitorar" -->
     <div id="monitorarContainer" class="container mt-4" style="display: none;">
         <h3 class="text-center">Configure os limites e a periodicidade</h3>
-
         <form id="ativo-form" method="post" action="{% url 'core:ativo-detail' symbol=symbol %}">
             {% csrf_token %}
-            <div class="row">
-                <div class="col-md-6">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
                     <div class="form-group">
                         <h1 class="text-center mb-4">{{ symbol }} - {{ longName }} (Exchange: {{ exchange }})</h1>
                         <label for="periodicidade">Periodicidade de Checagem (Minutos)</label>

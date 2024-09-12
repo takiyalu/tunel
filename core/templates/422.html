@@ -1,0 +1,25 @@
+{% load bootstrap4%}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error 422</title>
+    <!-- Include Bootstrap 4 CSS -->
+    {% bootstrap_css %}
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+{% block content %}
+    {% include 'topo.html' %}
+{% endblock %}
+    <!-- Área de Busca -->
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">422 - Unprocessable Entry</h1>
+    </div>
+
+    <script src="{% static 'js/script.js' %}" defer></script>
+    {% bootstrap_javascript jquery='full' %}
+</body>
+</html>

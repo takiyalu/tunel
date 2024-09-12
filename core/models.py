@@ -3,8 +3,8 @@ from django.contrib.auth.models import User
 
 
 class Base(models.Model):
-    created = models.DateField('Creation', auto_now_add=True)
-    updated = models.DateField('Update Day', auto_now=True)
+    created = models.DateTimeField('Creation', auto_now_add=True)
+    updated = models.DateTimeField('Last Update', auto_now=True)
     active = models.BooleanField('Active?', default=True)
 
     class Meta:

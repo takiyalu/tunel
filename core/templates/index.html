@@ -11,20 +11,15 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
 </head>
 <body>
-    <nav>
-        <!-- Other navigation links -->
-        <a href="{% url 'core:perfil' %}" class="btn btn-custom mx-3">Meu Perfil</a>
-        <form method="post" action="{% url 'core:logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-        </form>
-    </nav>
+{% block content %}
+    {% include 'topo.html' %}
+{% endblock %}
     <!-- Titulo descritivo -->
     <header>
         <div id="topo" class="topo-bg d-flex justify-content-center align-items-center">
             <div class="container text-center">
                 <h2 class="head-title">Utilize a área de busca para pesquisar pelos ativos que deseja monitorar</h2>
-                <p>Clique em 'Buscar Ativos Salvos' para listar os ativos que estão sendo monitorados no momento.</p>
+                <p>Na aba de navegação clique em 'Ativos-Salvos' para visualizar os ativos que estão sendo monitorados no momento.</p>
                 <div class="header-button">
                 </div>
             </div>
@@ -38,8 +33,8 @@
             <form id="pesquisa-form" method="get" action="{% url 'core:pesquisa' %}">
                 {% csrf_token %}
 
-                <div class="row">
-                    <div class="col-md-6">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
                         <div class="form-group">
                             <label for="palavra_chave">Nome ou Ticker:</label>
                             <input type="text" class="form-control" id="palavra_chave" name="palavra_chave" placeholder="Nome ou Ticker">
@@ -51,18 +46,11 @@
                 </div>
                 <div class="submit-button text-center">
                     <button class="btn btn-custom mx-3" id="form-submit" type="submit">Procurar</button>
-                    <div id="msgSubmit" class="h3 text-center hidden"></div>
                 </div>
             </form>
         </div>
     </div>
-
     <!-- Fim da Área de Busca -->
-    <!-- Botão para listagem de ativos salvos -->
-    <div class="d-flex justify-content-center mt-4">
-        <a href="{% url 'core:salvos' %}" class="btn btn-custom mx-3">Listar ativos salvos</a>
-    </div>
-
     <script src="{% static 'js/script.js' %}" defer></script>
     {% bootstrap_javascript jquery='full' %}
 </body>
