@@ -54,7 +54,15 @@
             </form>
 
         <div class="d-flex justify-content-center">
-                {% if pesquisa %}
+ {% if pesquisa %}
+    {% if pesquisa|length == 0 %}
+        <!-- Handle the case where `pesquisa` is an empty list -->
+        <p>No results found.</p>
+    {% elif pesquisa|length > 0%}
+        <!-- Handle the case where `pesquisa` is a string message -->
+        <p>{{ pesquisa }}</p>
+    {% else %}
+        <!-- Handle the case where `pesquisa` is a list and display the table -->
         <table border="1">
             <thead>
                 <tr>
@@ -66,25 +74,26 @@
             <tbody>
                 {% for row in pesquisa %}
                     <tr>
-                            {% for key, value in row.items %}
-                                {% if key == 'name' %}
-                                    <!-- Add a link to the name column -->
-                                    <td>
-                                        <a href="{% url 'core:ativo-detail' symbol=row.symbol %}">
-                                            {{ value }}
-                                        </a>
-                                    </td>
-                                {% else %}
-                                    <td>{{ value }}</td>
-                                {% endif %}
-                            {% endfor %}
+                        {% for key, value in row.items %}
+                            {% if key == 'name' %}
+                                <!-- Add a link to the name column -->
+                                <td>
+                                    <a href="{% url 'core:ativo-detail' symbol=row.symbol %}">
+                                        {{ value }}
+                                    </a>
+                                </td>
+                            {% else %}
+                                <td>{{ value }}</td>
+                            {% endif %}
+                        {% endfor %}
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>Não foram encontrados resultados para "{{ request.GET.palavra_chave }}".</p>
     {% endif %}
+ {% else %}
+    <p>Não foram encontrados resultados para "{{ request.GET.palavra_chave }}".</p>
+ {% endif %}
         </div>
     </div>
         <!-- Fim da Área de Busca -->
