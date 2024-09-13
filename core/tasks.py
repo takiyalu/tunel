@@ -17,24 +17,20 @@ class PriceNotFoundException(Exception):
 
 @shared_task
 def atualiza_preco_ativo(ativo_id, **kwargs):
-    logger.debug(f"Task atualiza_preco_ativo started with ativo_id: {ativo_id}")
     try:
         ativo = Ativo.objects.get(id=ativo_id)
         ticker = yf.Ticker(ativo.ticker)
         preco = ticker.history(period='1d')
         if not preco.empty:
             preco = preco.iloc[0]['Close']
-            logger.info(f"Preço encontrado para o ativo {ativo_id}: {preco}")
         else:
             # caso não haja dado nenhum preco (O mercado para aquele ativo provavelmente ainda não está aberto ou ja
             # fechou) utilizamos o último valor registrado
             preco = ticker.info['previousClose']
             if preco is None:
                 raise PriceNotFoundException("Nenhum preço encontrado para o ativo.")
-            logger.info(f"Preço encontrado para o ativo {ativo_id}: {preco}")
         ativo.preco = preco
         ativo.save()
-        logger.info(f"Preço encontrado para o ativo {ativo_id}: {preco}")
 
         if preco < ativo.limite_inferior:
             enviar_email(ativo, ticker, tipo=False)
@@ -51,14 +47,6 @@ def atualiza_preco_ativo(ativo_id, **kwargs):
 
 def enviar_email(ativo, ticker, tipo):
     current_user = ativo.usuario.email
-    print(ativo)
-    print(ticker)
-    print(tipo)
-    print(ticker.info["ask"])
-    print(ticker.info["bid"])
-    print(ativo.nome)
-    print(ativo.ticker)
-    print("Função chamada")
     if tipo:
         message = 'Oportunidade de Venda!'
         direcao = 'superior'
@@ -67,11 +55,7 @@ def enviar_email(ativo, ticker, tipo):
         message = 'Oportunidade de Compra!'
         direcao = 'inferior'
         limite = ativo.limite_inferior
-    print(message)
-    print(direcao)
-    print(limite)
-    print(settings.DEFAULT_FROM_EMAIL)
-    print(current_user)
+
     send_mail(
         subject=f'{message}: {ativo.ticker} - {ativo.nome}',
         message=f'O preço da ({ativo.ticker}) ultrapassou o limite {direcao} definido.\n'
@@ -80,8 +64,3 @@ def enviar_email(ativo, ticker, tipo):
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[current_user],
     )
-
-
-@shared_task
-def add(x, y):
-    return x + y

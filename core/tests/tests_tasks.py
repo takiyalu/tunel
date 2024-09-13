@@ -1,5 +1,4 @@
-from unittest.mock import patch, MagicMock
-from core.tasks import enviar_email
+from unittest.mock import patch
 from django.test import TestCase
 from core.tasks import atualiza_preco_ativo
 from core.models import Ativo
@@ -64,8 +63,8 @@ class AtualizaPrecoAtivoTestCase(TestCase):
 
 
     @patch('yfinance.Ticker')
-    @patch('django.core.mail.send_mail')
-    @patch('django.conf.settings.DEFAULT_FROM_EMAIL', new='no-reply@example.com')
+    @patch('core.tasks.send_mail')
+    @patch('django.conf.settings.DEFAULT_FROM_EMAIL', new='noreply@tunnel.com')
     def test_email_alert_lower_limit(self, mock_send_mail, mock_ticker):
         # Mock the yfinance Ticker response to trigger the lower limit email
         mock_ticker_instance = mock_ticker.return_value
@@ -87,17 +86,19 @@ class AtualizaPrecoAtivoTestCase(TestCase):
 
         # Refresh the Ativo instance from the database
         self.ativo.refresh_from_db()
-        print(mock_send_mail.call_args_list)
+
         # Check if the email was sent
         self.assertTrue(mock_send_mail.called)
         args, kwargs = mock_send_mail.call_args
         self.assertIn('Oportunidade de Compra!', kwargs['subject'])  # Check the email subject
         self.assertIn('Limite inferior definido', kwargs['message'])  # Check the email message
         self.assertIn(str(self.ativo.preco), kwargs['message'])  # Ensure the correct price is included
-        self.assertEqual(kwargs['from_email'], 'no-reply@example.com')  # Check the from email address
+        self.assertEqual(kwargs['from_email'], 'noreply@tunnel.com')  # Check the from email address
 
-"""
+
     @patch('yfinance.Ticker')
+    @patch('core.tasks.send_mail')
+    @patch('django.conf.settings.DEFAULT_FROM_EMAIL', new='noreply@tunnel.com')
     def test_email_alert_upper_limit(self, mock_send_mail, mock_ticker):
         # Mock the yfinance Ticker response to trigger the upper limit email
         mock_ticker_instance = mock_ticker.return_value
@@ -120,4 +121,4 @@ class AtualizaPrecoAtivoTestCase(TestCase):
         self.assertIn('Oportunidade de Venda!', kwargs['subject'])  # Check the email subject
         self.assertIn('Limite superior definido', kwargs['message'])  # Check the email message
         self.assertIn(str(self.ativo.preco), kwargs['message'])  # Ensure the correct price is included 
-"""
+        self.assertEqual(kwargs['from_email'], 'noreply@tunnel.com')  # Check the from email address

@@ -8,7 +8,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponse
+import re
 from django.conf import settings
 from .models import Ativo
 from .forms import PesquisaForm, AtivoForm, CadastroForm
@@ -22,19 +22,20 @@ class IndexView(LoginRequiredMixin, TemplateView):
     template_name = 'index.html'
     form_class = PesquisaForm
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        http = HttpResponse()
-        http['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        http['Pragma'] = 'no-cache'
-        http['Expires'] = '0'
-
-        form = self.form_class(self.request.GET or None)
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(request.GET or None)
 
         if form.is_valid():
             palavra_chave = form.cleaned_data.get('palavra_chave')
             # Redirect to PesquisaView with palavra_chave as a query parameter
             return redirect(f'{reverse("core:pesquisa")}?palavra_chave={palavra_chave}')
+
+        # If the form is not valid or no form data is provided, proceed normally
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None)  # Include form in context
         return context
 
 
@@ -67,7 +68,9 @@ class AtualizaPerfilView(LoginRequiredMixin, UpdateView):
     model = User
     form_class = UserChangeForm
     template_name = 'atualiza_perfil.html'
-    success_url = '/accounts/profile/'  # Redirect after successful update
+
+    def get_success_url(self):
+        return reverse('core:perfil')  # Redirect after successful update
 
     def get_object(self):
         return self.request.user  # Return the currently logged-in user
@@ -86,15 +89,29 @@ class PesquisaView(LoginRequiredMixin, TemplateView):
             url = (f'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={palavra_chave}&'
                    f'apikey={chave_api}&datatype=csv')
             response = requests.get(url)
+            content_type = response.headers.get('Content-Type')
+            if 'application/json' in content_type:
+                # Handle JSON response
+                try:
+                    data = response.json()
+                    if 'Information' in data:
+                        context['pesquisa'] = data['Information']
+                    else:
+                        # Process other JSON data if needed
+                        context['pesquisa'] = f"Received JSON response: {data}"
+                except ValueError:
+                    context['pesquisa'] = "Response content is not valid JSON."
             # Processamento de dados
-            if response.status_code == 200:
+            elif 'text/csv' in content_type and response.status_code == 200:
                 data = StringIO(response.text)
                 df = pd.read_csv(data)
-                # A API da Alpha Vantage retorna o símbolo dos ativos com uma letra a mais no final
-                # Exemplo: A Sanepar é retornada como "SAPR11.SAO", mas a yfinance precisa que o ticker seja passado
-                # como "SAPR11.SA", portanto fazemos o slicing abaixo.
-                df.loc[df['region'] == 'Brazil/Sao Paolo', 'symbol'] = df['symbol'].str[:-1]
-                context['pesquisa'] = df.to_dict(orient='records')  # Converts DataFrame to list of dicts
+                # Checa se as colunas estao presentes
+                if 'symbol' in df.columns and 'region' in df.columns:
+                    df.loc[df['region'] == 'Brazil/Sao Paolo', 'symbol'] = df['symbol'].str[:-1]
+                    context['pesquisa'] = df.to_dict(orient='records')
+                else:
+                    # Handle the case where the 'symbol' or 'region' column is missing
+                    context['pesquisa'] = []
             else:
                 context['pesquisa'] = []
 
