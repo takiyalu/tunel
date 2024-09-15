@@ -1,12 +1,14 @@
+import json
 from django.views.generic import TemplateView, FormView
+from django.contrib import messages
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.detail import DetailView
-from django.contrib.auth.models import User
-from django.views.generic.edit import UpdateView
 from django.contrib.auth.forms import UserChangeForm
-from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.contrib.auth.models import User
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView
+from django.http import JsonResponse, HttpResponseServerError, HttpResponse
+from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 import re
 from django.conf import settings
@@ -76,45 +78,49 @@ class AtualizaPerfilView(LoginRequiredMixin, UpdateView):
         return self.request.user  # Return the currently logged-in user
 
 
-class PesquisaView(LoginRequiredMixin, TemplateView):
+class PesquisaView(TemplateView):
     template_name = 'pesquisa.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        palavra_chave = self.request.GET.get('palavra_chave')
-        chave_api = settings.ALPHA_VANTAGE_API_KEY
-
+    def get(self, request, *args, **kwargs):
+        palavra_chave = request.GET.get('palavra_chave')
         if palavra_chave:
-            # Buscando dados da Alpha Vantage
+            chave_api = settings.ALPHA_VANTAGE_API_KEY
             url = (f'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={palavra_chave}&'
                    f'apikey={chave_api}&datatype=csv')
             response = requests.get(url)
             content_type = response.headers.get('Content-Type')
+
             if 'application/json' in content_type:
-                # Handle JSON response
                 try:
                     data = response.json()
                     if 'Information' in data:
-                        context['pesquisa'] = data['Information']
+                        return render(request, '503.html', {'message': data['Information']}, status=503)
+
                     else:
-                        # Process other JSON data if needed
-                        context['pesquisa'] = f"Received JSON response: {data}"
+                        # Return error response if JSON data is not valid
+                        return HttpResponseServerError(render(request, '500.html'))
                 except ValueError:
-                    context['pesquisa'] = "Response content is not valid JSON."
-            # Processamento de dados
-            elif 'text/csv' in content_type and response.status_code == 200:
+                    messages.error(request, "Response content is not valid JSON.")
+                    return redirect(reverse("core:index"))
+
+            elif response.status_code == 200:
+                # Process CSV data
                 data = StringIO(response.text)
                 df = pd.read_csv(data)
-                # Checa se as colunas estao presentes
                 if 'symbol' in df.columns and 'region' in df.columns:
                     df.loc[df['region'] == 'Brazil/Sao Paolo', 'symbol'] = df['symbol'].str[:-1]
-                    context['pesquisa'] = df.to_dict(orient='records')
+                    context = {'pesquisa': df.to_dict(orient='records')}
                 else:
-                    # Handle the case where the 'symbol' or 'region' column is missing
-                    context['pesquisa'] = []
+                    context = {'pesquisa': []}
             else:
-                context['pesquisa'] = []
+                context = {'pesquisa': []}
 
+            return self.render_to_response(context)
+
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         return context
 
 

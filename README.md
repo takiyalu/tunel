@@ -103,7 +103,7 @@ Also, it has been mostly designed to be run locally, in case of production envir
 3. **Start Celery Worker**
 
    ```bash
-   celery -A tunnel worker -E -A celery --loglevel=info
+   celery celery -A myapp.celeryapp worker --loglevel=info -P eventlet
    ```
 
 ### Celery Beat Setup

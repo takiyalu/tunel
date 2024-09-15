@@ -49,8 +49,8 @@
             </tbody>
         </table>
     </div>
-            <div class="d-flex justify-content-center mt-4">
-            <button id="monitorarBtn" class="btn btn-primary" onclick="validateProduct('{{ symbol }}')">Monitorar</button>
+        <div class="d-flex justify-content-center mt-4">
+        <button id="monitorarBtn" class="btn btn-primary" onclick="validateProduct('{{ symbol }}')">Monitorar</button>
         </div>
     </div>
 
@@ -103,6 +103,7 @@
             </div>
         </div>
     </div>
+    <div id="message-data" data-message="{{ message|escapejs }}" style="display: none;"></div>
     <script src="{% static 'js/script.js' %}" defer></script>
     {% bootstrap_javascript jquery='full' %}
 </body>

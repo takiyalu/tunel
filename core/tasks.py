@@ -17,6 +17,7 @@ class PriceNotFoundException(Exception):
 
 @shared_task
 def atualiza_preco_ativo(ativo_id, **kwargs):
+    logger.debug(f"Task atualiza_preco_ativo started with ativo_id: {ativo_id}")
     try:
         ativo = Ativo.objects.get(id=ativo_id)
         ticker = yf.Ticker(ativo.ticker)
@@ -38,7 +39,7 @@ def atualiza_preco_ativo(ativo_id, **kwargs):
             enviar_email(ativo, ticker, tipo=True)
         return preco
     except ObjectDoesNotExist:
-        print(f"Ativo com ID {ativo_id} não encontrado.")
+        logger.error(f"Ativo com ID {ativo_id} não encontrado.")
     except PriceNotFoundException as e:
         logger.error(f"Erro ao atualizar preço para o ativo {ativo_id}: {e}")
     except Exception as ex:

@@ -37,7 +37,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6^^7z7-p7hlf2+mwcg^%r_u-6g*w_xzl_c-*+lndozuihqtr(%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # Ajustar host para o caso de subir para produção
 ALLOWED_HOSTS = ['*']
@@ -55,7 +55,7 @@ CELERY_TIMEZONE = 'America/Sao_Paulo'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_ALWAYS_EAGER = True
 
 # Application definition
 

@@ -11,7 +11,7 @@ document.getElementById('monitorarBtn').addEventListener('click', function() {
 document.addEventListener("DOMContentLoaded", function() {
     // Check if there's a success message and scroll to top
     if (document.querySelector('.success-message')) {
-        window.scrollTo(0, 0);
+        window.scrollTo(0, 500);
     }
 });
 
