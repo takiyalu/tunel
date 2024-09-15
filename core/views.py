@@ -1,6 +1,5 @@
 import json
 from django.views.generic import TemplateView, FormView
-<<<<<<< HEAD
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,16 +9,6 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
 from django.http import JsonResponse, HttpResponseServerError, HttpResponse
 from django.shortcuts import redirect, render
-=======
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.detail import DetailView
-from django.contrib.auth.models import User
-from django.views.generic.edit import UpdateView
-from django.contrib.auth.forms import UserChangeForm
-from django.http import JsonResponse
-from django.shortcuts import redirect
->>>>>>> 554fc60bbd804f2a07422eeeb118d230d2125621
 from django.urls import reverse, reverse_lazy
 import re
 from django.conf import settings
@@ -89,38 +78,25 @@ class AtualizaPerfilView(LoginRequiredMixin, UpdateView):
         return self.request.user  # Return the currently logged-in user
 
 
-<<<<<<< HEAD
-class PesquisaView(TemplateView):
+class PesquisaView(LoginRequiredMixin, TemplateView):
     template_name = 'pesquisa.html'
 
     def get(self, request, *args, **kwargs):
         palavra_chave = request.GET.get('palavra_chave')
         if palavra_chave:
             chave_api = settings.ALPHA_VANTAGE_API_KEY
-=======
-class PesquisaView(LoginRequiredMixin, TemplateView):
-    template_name = 'pesquisa.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        palavra_chave = self.request.GET.get('palavra_chave')
-        chave_api = settings.ALPHA_VANTAGE_API_KEY
-
-        if palavra_chave:
             # Buscando dados da Alpha Vantage
->>>>>>> 554fc60bbd804f2a07422eeeb118d230d2125621
             url = (f'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={palavra_chave}&'
                    f'apikey={chave_api}&datatype=csv')
             response = requests.get(url)
             content_type = response.headers.get('Content-Type')
-<<<<<<< HEAD
-
             if 'application/json' in content_type:
                 try:
                     data = response.json()
+                    print(data)
                     if 'Information' in data:
-                        return render(request, '503.html', {'message': data['Information']}, status=503)
 
+                        return render(request, '503.html', {'message': data['Information']}, status=503)
                     else:
                         # Return error response if JSON data is not valid
                         return HttpResponseServerError(render(request, '500.html'))
@@ -137,30 +113,6 @@ class PesquisaView(LoginRequiredMixin, TemplateView):
                     context = {'pesquisa': df.to_dict(orient='records')}
                 else:
                     context = {'pesquisa': []}
-=======
-            if 'application/json' in content_type:
-                # Handle JSON response
-                try:
-                    data = response.json()
-                    if 'Information' in data:
-                        context['pesquisa'] = data['Information']
-                    else:
-                        # Process other JSON data if needed
-                        context['pesquisa'] = f"Received JSON response: {data}"
-                except ValueError:
-                    context['pesquisa'] = "Response content is not valid JSON."
-            # Processamento de dados
-            elif 'text/csv' in content_type and response.status_code == 200:
-                data = StringIO(response.text)
-                df = pd.read_csv(data)
-                # Checa se as colunas estao presentes
-                if 'symbol' in df.columns and 'region' in df.columns:
-                    df.loc[df['region'] == 'Brazil/Sao Paolo', 'symbol'] = df['symbol'].str[:-1]
-                    context['pesquisa'] = df.to_dict(orient='records')
-                else:
-                    # Handle the case where the 'symbol' or 'region' column is missing
-                    context['pesquisa'] = []
->>>>>>> 554fc60bbd804f2a07422eeeb118d230d2125621
             else:
                 context = {'pesquisa': []}
 

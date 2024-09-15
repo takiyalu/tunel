@@ -55,11 +55,8 @@ CELERY_TIMEZONE = 'America/Sao_Paulo'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-<<<<<<< HEAD
-CELERY_TASK_ALWAYS_EAGER = True
-=======
+
 CELERY_TASK_ALWAYS_EAGER = False
->>>>>>> 554fc60bbd804f2a07422eeeb118d230d2125621
 
 # Application definition
 
