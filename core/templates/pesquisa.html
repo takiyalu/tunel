@@ -55,6 +55,16 @@
 
         <div class="d-flex justify-content-center">
  {% if pesquisa %}
+<<<<<<< HEAD
+=======
+    {% if pesquisa|length == 0 %}
+        <!-- Handle the case where `pesquisa` is an empty list -->
+        <p>No results found.</p>
+    {% elif pesquisa|length > 0%}
+        <!-- Handle the case where `pesquisa` is a string message -->
+        <p>{{ pesquisa }}</p>
+    {% else %}
+>>>>>>> 554fc60bbd804f2a07422eeeb118d230d2125621
         <!-- Handle the case where `pesquisa` is a list and display the table -->
         <table border="1">
             <thead>
@@ -83,6 +93,10 @@
                 {% endfor %}
             </tbody>
         </table>
+<<<<<<< HEAD
+=======
+    {% endif %}
+>>>>>>> 554fc60bbd804f2a07422eeeb118d230d2125621
  {% else %}
     <p>Não foram encontrados resultados para "{{ request.GET.palavra_chave }}".</p>
  {% endif %}
