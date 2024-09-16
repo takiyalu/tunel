@@ -2,7 +2,7 @@ import logging
 from celery import shared_task
 from django.core.exceptions import ObjectDoesNotExist
 import yfinance as yf
-from .models import Ativo
+from .models import AtivoDetalhe
 from django.conf import settings
 from django.core.mail import send_mail
 
@@ -16,10 +16,10 @@ class PriceNotFoundException(Exception):
 
 
 @shared_task
-def atualiza_preco_ativo(ativo_id, **kwargs):
+def atualiza_preco_ativo(detalhe_id):
     try:
-        ativo = Ativo.objects.get(id=ativo_id)
-        ticker = yf.Ticker(ativo.ticker)
+        detalhe = AtivoDetalhe.objects.get(id=detalhe_id)
+        ticker = yf.Ticker(detalhe.ativo.ticker)
         preco = ticker.history(period='1d')
         if not preco.empty:
             preco = preco.iloc[0]['Close']
@@ -29,40 +29,46 @@ def atualiza_preco_ativo(ativo_id, **kwargs):
             preco = ticker.info['previousClose']
             if preco is None:
                 raise PriceNotFoundException("Nenhum preço encontrado para o ativo.")
-        ativo.preco = preco
-        ativo.save()
-
-        if preco < ativo.limite_inferior:
-            enviar_email(ativo, ticker, tipo=False)
-        elif preco > ativo.limite_superior:
-            enviar_email(ativo, ticker, tipo=True)
+        detalhe.ativo.preco = preco
+        detalhe.ativo.save()
+        if not detalhe.email_enviado:
+            if preco < detalhe.limite_inferior:
+                enviar_email(detalhe, ticker, tipo=False)
+            elif preco > detalhe.limite_superior:
+                enviar_email(detalhe, ticker, tipo=True)
+        else:
+            if detalhe.limite_inferior < preco < detalhe.limite_superior:
+                detalhe.email_enviado = False
+                detalhe.save()
         return preco
 
     except ObjectDoesNotExist:
-        logger.error(f"Ativo com ID {ativo_id} não encontrado.")
+        logger.error(f"Ativo com ID {detalhe_id} não encontrado.")
     except PriceNotFoundException as e:
-        logger.error(f"Erro ao atualizar preço para o ativo {ativo_id}: {e}")
+        logger.error(f"Erro ao atualizar preço para o ativo {detalhe_id}: {e}")
     except Exception as ex:
-        logger.error(f"Erro ao atualizar preço para o ativo {ativo_id}: {ex}")
+        logger.error(f"Erro ao atualizar preço para o ativo {detalhe_id}: {ex}")
 
 
-def enviar_email(ativo, ticker, tipo):
-    current_user = ativo.usuario.email
+def enviar_email(detalhe, ticker, tipo):
+    current_user = detalhe.usuario.email
     if tipo:
         message = 'Oportunidade de Venda!'
         direcao = 'superior'
-        limite = ativo.limite_superior
+        limite = detalhe.limite_superior
     else:
         message = 'Oportunidade de Compra!'
         direcao = 'inferior'
-        limite = ativo.limite_inferior
+        limite = detalhe.limite_inferior
 
     send_mail(
-        subject=f'{message}: {ativo.ticker} - {ativo.nome}',
-        message=f'O preço da ({ativo.ticker}) ultrapassou o limite {direcao} definido.\n'
-                f'Limite {direcao} definido: {limite}\nPreço atual: {ativo.preco}\nBid: {ticker.info["bid"]}'
+        subject=f'{message}: {detalhe.ativo.ticker} - {detalhe.ativo.nome}',
+        message=f'O preço da ({detalhe.ativo.ticker}) ultrapassou o limite {direcao} definido.\n'
+                f'Limite {direcao} definido: {limite}\nPreço atual: {detalhe.ativo.preco}\nBid: {ticker.info["bid"]}'
                 f'\nAsk: {ticker.info["ask"]}',
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[current_user],
     )
+    detalhe.email_enviado = True
+    detalhe.save()
 

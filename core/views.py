@@ -1,5 +1,5 @@
 import json
-from django.views.generic import TemplateView, FormView
+from django.views.generic import TemplateView, FormView, View
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,10 +10,11 @@ from django.views.generic.edit import UpdateView
 from django.http import JsonResponse, HttpResponseServerError, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 import re
 from django.conf import settings
-from .models import Ativo
-from .forms import PesquisaForm, AtivoForm, CadastroForm
+from .models import Ativo, AtivoDetalhe
+from .forms import PesquisaForm, AtivoDetalheForm, CadastroForm
 import yfinance as yf
 import requests
 import pandas as pd
@@ -51,6 +52,7 @@ class CadastroView(FormView):
         # Optionally log in the user after registration
         from django.contrib.auth import login
         login(self.request, user)
+        messages.success(request, "Usuário Cadastrado com Sucesso")
         return super().form_valid(form)
 
 
@@ -72,6 +74,7 @@ class AtualizaPerfilView(LoginRequiredMixin, UpdateView):
     template_name = 'atualiza_perfil.html'
 
     def get_success_url(self):
+        messages.success(self.request, "Perfil Editado com Sucesso")
         return reverse('core:perfil')  # Redirect after successful update
 
     def get_object(self):
@@ -85,15 +88,16 @@ class PesquisaView(LoginRequiredMixin, TemplateView):
         palavra_chave = request.GET.get('palavra_chave')
         if palavra_chave:
             chave_api = settings.ALPHA_VANTAGE_API_KEY
-            # Buscando dados da Alpha Vantage
+            # Send an api request to alphavantage search app and returns a table with the stock's information
             url = (f'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={palavra_chave}&'
                    f'apikey={chave_api}&datatype=csv')
             response = requests.get(url)
+            # When AlphaVantage does not return any data or does not allow any more requests they return a json instead
+            # of the csv response.
             content_type = response.headers.get('Content-Type')
             if 'application/json' in content_type:
                 try:
                     data = response.json()
-                    print(data)
                     if 'Information' in data:
 
                         return render(request, '503.html', {'message': data['Information']}, status=503)
@@ -109,10 +113,14 @@ class PesquisaView(LoginRequiredMixin, TemplateView):
                 data = StringIO(response.text)
                 df = pd.read_csv(data)
                 if 'symbol' in df.columns and 'region' in df.columns:
+                    # AlphaVantage`s brazilian stock's tickers comes with an extra 'O' in the name that yfinance can't
+                    # process, so we remove it below.
                     df.loc[df['region'] == 'Brazil/Sao Paolo', 'symbol'] = df['symbol'].str[:-1]
                     context = {'pesquisa': df.to_dict(orient='records')}
                 else:
+                    # If the symbol was not found
                     context = {'pesquisa': []}
+            # If we don't receive 200 response
             else:
                 context = {'pesquisa': []}
 
@@ -127,7 +135,10 @@ class PesquisaView(LoginRequiredMixin, TemplateView):
 
 class AtivoView(LoginRequiredMixin, FormView):
     template_name = 'ativo.html'
-    form_class = AtivoForm
+    form_class = AtivoDetalheForm
+
+    def get_success_url(self):
+        return reverse('core:index')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -148,7 +159,14 @@ class AtivoView(LoginRequiredMixin, FormView):
         # Check if the request is an AJAX request for validation
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             ticker = request.GET.get('ticker')
-            is_monitored = Ativo.objects.filter(ticker=ticker, usuario=request.user).exists()
+
+            try:
+                # Retrieve the Ativo instance based on ticker, if it does not exist we can monitor it.
+                ativo = Ativo.objects.get(ticker=ticker)
+            except Ativo.DoesNotExist:
+                return JsonResponse({'is_monitored': False})
+
+            is_monitored = AtivoDetalhe.objects.filter(ativo=ativo, usuario=request.user).exists()
             return JsonResponse({'is_monitored': is_monitored})
 
         # If not an AJAX request, handle normally
@@ -166,23 +184,45 @@ class AtivoView(LoginRequiredMixin, FormView):
             # fechou) utilizamos o último valor registrado
             preco = product.info['previousClose']
 
-        ativo = Ativo(
-            nome=product.info['longName'],
+        # Check whether the current ativo already exists in the database, if not, it is created.
+        ativo, created = Ativo.objects.get_or_create(
             ticker=symbol,
-            preco=preco,
+            defaults={'nome': product.info['longName']}
+        )
+        if not created:
+            # Update field if name has changed
+            ativo.nome = product.info['longName']
+        ativo.preco = preco
+        ativo.save()
+        # Create AtivoDetalhe
+        ativo_detalhe = AtivoDetalhe(
+            usuario=self.request.user,
+            ativo=ativo,
             periodicidade=form.cleaned_data['periodicidade'],
             limite_superior=form.cleaned_data['limite_superior'],
-            limite_inferior=form.cleaned_data['limite_inferior'],
-            usuario=self.request.user
+            limite_inferior=form.cleaned_data['limite_inferior']
         )
 
-        ativo.save()
-        return self.render_to_response(context)
+        ativo_detalhe.save()
+        # Schedule the task for this ativo
+        interval, created = IntervalSchedule.objects.get_or_create(
+            every=ativo_detalhe.periodicidade,
+            period=IntervalSchedule.MINUTES
+        )
+
+        PeriodicTask.objects.create(
+            interval=interval,
+            name=f"Atualiza preço de ativo {ativo_detalhe.id}",
+            task='core.tasks.atualiza_preco_ativo',
+            args=json.dumps([ativo_detalhe.id]),
+        )
+
+        messages.success(self.request, 'Ativo is now being monitored.')
+        return super().form_valid(form)
 
     def form_invalid(self, form):
-        context = self.get_context_data(form=form)
-        return self.render_to_response(context)
-
+        messages.error(self.request, 'Form submission failed.')
+        return super().form_invalid(form)
 
 class AtivosSalvosView(LoginRequiredMixin, TemplateView):
     template_name = 'ativos_salvos.html'
@@ -190,31 +230,46 @@ class AtivosSalvosView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Campos a serem excluídos
-        campos_nao_selecionados = ['created', 'active', 'usuario']
-
-        # Todos os campos do modelo
-        todos_os_campos = [campo.name for campo in Ativo._meta.fields]
-
-        # Campos a serem incluídos
-        campos_selecionados = [campo for campo in todos_os_campos if campo not in campos_nao_selecionados]
-
-        # Campos editáveis
+        # Editable Fields
         campos_editaveis = ['periodicidade', 'limite_inferior', 'limite_superior']
+
+        detalhes = AtivoDetalhe.objects.filter(usuario=self.request.user).select_related('ativo')
+
+        data = []
+        for detalhe in detalhes:
+            # Combine fields from AtivoDetalhe and Ativo
+            combined_data = {
+                'nome': detalhe.ativo.nome,
+                'ticker': detalhe.ativo.ticker,
+                'preco': detalhe.ativo.preco,
+                'id': detalhe.id,
+                'periodicidade': detalhe.periodicidade,
+                'limite_inferior': detalhe.limite_inferior,
+                'limite_superior': detalhe.limite_superior,
+            }
+            data.append(combined_data)
+
         # Buscando ativos salvos na base de dados
-        context['ativos'] = list(Ativo.objects.filter(usuario=self.request.user).values(*campos_selecionados))
+        context['ativos'] = data
         context['editaveis'] = campos_editaveis
         return context
 
     def post(self, request, *args, **kwargs):
+        selected_ids = request.POST.getlist('selected_ativos')
+        if selected_ids:
+            AtivoDetalhe.objects.filter(id__in=selected_ids).delete()
+            messages.success(request, "Ativos selecionados foram excluídos com sucesso.")
+        else:
+            messages.warning(request, "Nenhum ativo selecionado para exclusão.")
+
         for chave, valor in request.POST.items():
-            if chave.startswith('ativo_'):  # Ensure only relevant fields are processed
-                _, id, campo = chave.split('_', 2)  # Recupera id e campo da chave
+            if chave.startswith('ativo_'):
+                _, id, campo = chave.split('_', 2)
                 try:
-                    ativo = Ativo.objects.get(id=id)
+                    ativo = AtivoDetalhe.objects.get(id=id)
                     setattr(ativo, campo, valor.replace(',', '.'))
                     ativo.save()
-                except Ativo.DoesNotExist:
-                    continue  # Gerencia casos em que o Ativo não é encontrado
-
+                except AtivoDetalhe.DoesNotExist:
+                    continue
+        messages.success(request, 'Ativos Foram Modificados/Salvos com Sucesso.')
         return redirect('core:salvos')

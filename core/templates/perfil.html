@@ -16,5 +16,12 @@
 <p>Username: {{ user.username }}</p>
 <p>Email: {{ user.email }}</p>
 <a href="{% url 'core:atualiza-perfil' %}" id="form-submit">Editar Perfil</a>
+        {% if messages %}
+        <div id="message-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
 </body>
 </html>

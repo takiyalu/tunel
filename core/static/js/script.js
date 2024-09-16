@@ -8,13 +8,6 @@ document.getElementById('monitorarBtn').addEventListener('click', function() {
     }
 });
 
-document.addEventListener("DOMContentLoaded", function() {
-    // Check if there's a success message and scroll to top
-    if (document.querySelector('.success-message')) {
-        window.scrollTo(0, 500);
-    }
-});
-
 function validateProduct(ticker) {
     // Send an AJAX request to the server to check if the product is already monitored
     fetch(`/ativo/?ticker=${ticker}`, {  // Ensure URL is correct
@@ -43,7 +36,9 @@ function validateProduct(ticker) {
             setTimeout(() => {
                 monitorarContainer.scrollIntoView({ behavior: 'smooth' });
             }, 100);  // Adjust the delay if necessary
+
         }
     })
     .catch(error => console.error('Error:', error));
 }
+

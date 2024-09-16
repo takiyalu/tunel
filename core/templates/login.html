@@ -19,6 +19,13 @@
     <div class="d-inline-block ms-2">
         <a href="{% url 'core:cadastro' %}" class="btn btn-primary btn-sm">Cadastrar</a>
     </div>
+            {% if messages %}
+        <div id="message-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
 </form>
 </body>
 </html>
