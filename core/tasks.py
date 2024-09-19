@@ -31,13 +31,17 @@ def atualiza_preco_ativo(detalhe_id):
                 raise PriceNotFoundException("Nenhum preço encontrado para o ativo.")
         detalhe.ativo.preco = preco
         detalhe.ativo.save()
+        # If email_enviado is False, and preco is over the limit we trigger the email enviar_email function
         if not detalhe.email_enviado:
             if preco < detalhe.limite_inferior:
                 enviar_email(detalhe, ticker, tipo=False)
             elif preco > detalhe.limite_superior:
                 enviar_email(detalhe, ticker, tipo=True)
+        # If email_enviado is True but our price is back in the range between the two limits, we change our flag to
+        # False again in order to send the email when the price surpasses the limit again.
         else:
             if detalhe.limite_inferior < preco < detalhe.limite_superior:
+                # If preco
                 detalhe.email_enviado = False
                 detalhe.save()
         return preco
@@ -61,6 +65,7 @@ def enviar_email(detalhe, ticker, tipo):
         direcao = 'inferior'
         limite = detalhe.limite_inferior
 
+    # Calling email function
     send_mail(
         subject=f'{message}: {detalhe.ativo.ticker} - {detalhe.ativo.nome}',
         message=f'O preço da ({detalhe.ativo.ticker}) ultrapassou o limite {direcao} definido.\n'
@@ -69,6 +74,7 @@ def enviar_email(detalhe, ticker, tipo):
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[current_user],
     )
+    # Set email_enviado to true in order send the email only once while it is over the limit.
     detalhe.email_enviado = True
     detalhe.save()
 

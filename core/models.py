@@ -10,6 +10,7 @@ class Base(models.Model):
     class Meta:
         abstract = True
 
+# Represents the stocks/products basic information that will be unique in the database
 class Ativo(Base):
     nome = models.CharField('Nome', max_length=100)
     ticker = models.CharField('Ticker', max_length=10, unique=True)
@@ -22,6 +23,9 @@ class Ativo(Base):
     def __str__(self):
         return f'{self.ticker}'
 
+
+# Carries the foreign key of usuario and ativo making the bridge between them and also carries the flag and our main
+# parameters
 class AtivoDetalhe(Base):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ativo_detalhes')
     ativo = models.ForeignKey(Ativo, on_delete=models.CASCADE, related_name='ativos_detalhes')

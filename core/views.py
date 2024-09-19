@@ -20,7 +20,7 @@ import requests
 import pandas as pd
 from io import StringIO
 
-
+# LoginRequiredMixin ensures that the user must be logged in order to access the template for that view.
 class IndexView(LoginRequiredMixin, TemplateView):
     template_name = 'index.html'
     form_class = PesquisaForm
@@ -255,13 +255,14 @@ class AtivosSalvosView(LoginRequiredMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        # takes the selected ids in order to delete them
         selected_ids = request.POST.getlist('selected_ativos')
         if selected_ids:
             AtivoDetalhe.objects.filter(id__in=selected_ids).delete()
             messages.success(request, "Ativos selecionados foram excluídos com sucesso.")
         else:
             messages.warning(request, "Nenhum ativo selecionado para exclusão.")
-
+        # The ones that remain will also be updated according to their id and the fields that were changed
         for chave, valor in request.POST.items():
             if chave.startswith('ativo_'):
                 _, id, campo = chave.split('_', 2)
