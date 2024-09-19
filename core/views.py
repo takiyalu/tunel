@@ -52,7 +52,7 @@ class CadastroView(FormView):
         # Optionally log in the user after registration
         from django.contrib.auth import login
         login(self.request, user)
-        messages.success(request, "Usuário Cadastrado com Sucesso")
+        messages.success(self.request, "Usuário Cadastrado com Sucesso")
         return super().form_valid(form)
 
 
@@ -187,7 +187,7 @@ class AtivoView(LoginRequiredMixin, FormView):
         # Check whether the current ativo already exists in the database, if not, it is created.
         ativo, created = Ativo.objects.get_or_create(
             ticker=symbol,
-            defaults={'nome': product.info['longName']}
+            defaults={'nome': product.info['longName'], 'preco': preco}
         )
         if not created:
             # Update field if name has changed

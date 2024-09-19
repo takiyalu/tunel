@@ -1,7 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from core.models import Ativo
+from core.models import Ativo, AtivoDetalhe
+from decimal import Decimal
 
 User = get_user_model()
 
@@ -15,11 +16,14 @@ class AtivosSalvosViewTest(TestCase):
         self.ativo = Ativo.objects.create(
             nome='Test Asset',
             ticker='AAPL',
-            preco=150.00,
+            preco=Decimal('150.00'),
+        )
+        self.detalhe = AtivoDetalhe.objects.create(
+            ativo=self.ativo,
+            usuario=self.user,
             periodicidade=5,
-            limite_superior=200.00,
-            limite_inferior=100.00,
-            usuario=self.user
+            limite_inferior=Decimal('200.00'),
+            limite_superior=Decimal('100.50')
         )
 
     def test_ativos_salvos_view_get(self):
@@ -28,9 +32,9 @@ class AtivosSalvosViewTest(TestCase):
         self.assertTemplateUsed(response, 'ativos_salvos.html')
         self.assertContains(response, 'Test Asset')
 
-    def test_atualiza_ativo_post(self):
+    def test_atualiza_detalhe_post(self):
         form_data = {
-            f'ativo_{self.ativo.id}_periodicidade': 10  # Ensure this matches the expected format
+            f'ativo_{self.detalhe.id}_periodicidade': '10'  # Ensure this matches the expected format
         }
         response = self.client.post(self.url, data=form_data)
 
@@ -39,4 +43,5 @@ class AtivosSalvosViewTest(TestCase):
 
         # Refresh the Ativo instance and check the updated value
         self.ativo.refresh_from_db()
-        self.assertEqual(self.ativo.periodicidade, 10)
+        self.detalhe.refresh_from_db()
+        self.assertEqual(self.detalhe.periodicidade, 10)

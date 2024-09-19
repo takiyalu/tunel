@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from django.test import TestCase
 from core.tasks import atualiza_preco_ativo
-from core.models import Ativo
+from core.models import Ativo, AtivoDetalhe
 from django.contrib.auth.models import User
 from decimal import Decimal
 from django.core.mail import send_mail
@@ -26,13 +26,17 @@ class AtualizaPrecoAtivoTestCase(TestCase):
         # Create a user and an Ativo instance for testing
         self.user = User.objects.create_user(username="mock", password="senha", email='tester@domain.com')
         self.ativo = Ativo.objects.create(
-            nome="Ativo 1",
-            ticker="PETR4.SA",
+            nome='Ativo 1',
+            ticker='PETR4.SA',
+            preco=Decimal('170.00')
+        )
+
+        self.detalhe = AtivoDetalhe.objects.create(
+            ativo=self.ativo,
+            usuario=self.user,
             periodicidade=1,
-            preco=Decimal("170.00"),
-            limite_inferior=Decimal("100.00"),
-            limite_superior=Decimal("200.00"),
-            usuario=self.user
+            limite_inferior=Decimal('100.00'),
+            limite_superior=Decimal('200.00')
         )
 
     @patch('yfinance.Ticker')
@@ -53,7 +57,7 @@ class AtualizaPrecoAtivoTestCase(TestCase):
         }
 
         # Run the Celery task
-        atualiza_preco_ativo(self.ativo.id)
+        atualiza_preco_ativo(self.detalhe.id)
 
         # Check if the price was updated
         self.ativo.refresh_from_db()
@@ -86,6 +90,7 @@ class AtualizaPrecoAtivoTestCase(TestCase):
 
         # Refresh the Ativo instance from the database
         self.ativo.refresh_from_db()
+        self.detalhe.refresh_from_db()
 
         # Check if the email was sent
         self.assertTrue(mock_send_mail.called)
@@ -110,10 +115,11 @@ class AtualizaPrecoAtivoTestCase(TestCase):
         }
 
         # Run the Celery task
-        atualiza_preco_ativo(self.ativo.id)
+        atualiza_preco_ativo(self.detalhe.id)
 
         # Refresh the Ativo instance from the database
         self.ativo.refresh_from_db()
+        self.detalhe.refresh_from_db()
 
         # Check if the email was sent
         self.assertTrue(mock_send_mail.called)

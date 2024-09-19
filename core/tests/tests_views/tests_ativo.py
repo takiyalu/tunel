@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
-from core.models import Ativo
+from core.models import Ativo, AtivoDetalhe
 import pandas as pd
 from decimal import Decimal
 
@@ -17,11 +17,14 @@ class AtivoViewTest(TestCase):
         self.ativo = Ativo.objects.create(
             nome='Test Asset',
             ticker='AAPL',
-            preco=150.00,
+            preco=Decimal('150.00'),
+        )
+        self.detalhe = AtivoDetalhe.objects.create(
+            ativo=self.ativo,
+            usuario=self.user,
             periodicidade=5,
-            limite_superior=200.00,
-            limite_inferior=100.00,
-            usuario=self.user
+            limite_inferior=Decimal('200.00'),
+            limite_superior=Decimal('100.50')
         )
 
     @patch('yfinance.Ticker')
@@ -66,6 +69,5 @@ class AtivoViewTest(TestCase):
             'limite_inferior': '100.00'
         }
         response = self.client.post(self.url, data=form_data)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'ativo.html')
+        self.assertEqual(response.status_code, 302)
         self.assertTrue(Ativo.objects.filter(ticker='AAPL').exists())
